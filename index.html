@@ -219,7 +219,7 @@ footer{border-top:1px solid var(--line);background:#0b0b0d;margin-top:10px}
  .price{font-size:19px}
  .cat-card img{height:110px}.cat-card.feature img{height:150px}
  .phones{grid-template-columns:1fr}
- .logo small{display:none}
+ .logo small{display:block;font-size:9px;letter-spacing:.16em}
  .topbar-in{padding:10px 12px}
  .pillbtn{padding:0 12px;font-size:12px}
 }
@@ -320,6 +320,12 @@ html{scroll-padding-bottom:120px}
 /* deal cards */
 .dealbanner{position:relative}
 .dealbanner img{width:100%;height:172px;object-fit:cover}
+.dealphotos{display:grid;grid-template-columns:repeat(auto-fit,minmax(76px,1fr));gap:4px;padding:4px;background:#101013}
+.dealphotos .dph{border-radius:10px;overflow:hidden;background:#1c1c22;display:flex;flex-direction:column}
+.dealphotos .dph img{width:100%;height:74px;object-fit:cover}
+.dealphotos .dph span{display:block;font-size:11px;line-height:1.25;padding:5px 6px;color:#e8e8ea;text-align:center}
+.dealphotos .dph.txt{align-items:center;justify-content:center;min-height:104px}
+.dealphotos .dph.txt span{font-size:12px;font-weight:700}
 .savebadge{position:absolute;top:10px;left:10px;background:var(--yellow);color:#111;font-size:11.5px;font-weight:900;letter-spacing:.08em;padding:6px 11px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.45);text-transform:uppercase;z-index:2}
 .deal .item-body h4{font-size:17.5px}
 .dealprice{font-family:"Anton";font-size:28px;color:var(--red2);letter-spacing:.02em;white-space:nowrap;line-height:1}
@@ -666,7 +672,7 @@ h1,h2,.sec-head h2,.cat-hero-txt h2{line-height:1.12}
 <div class="toast" id="toast"></div>
 
 <header class="topbar"><div class="topbar-in">
-  <a class="logo" href="#" onclick="goHome();return false"><span class="logo-mark">62</span><span><b>PIZZA <em>62</em></b><small>HASILPUR • EST. FLAVOUR</small></span></a>
+  <a class="logo" href="#" onclick="goHome();return false"><span class="logo-mark">62</span><span><b>PIZZA <em>62</em></b><small>PIZZA62.NET • HASILPUR</small></span></a>
   <select class="otypesel" id="otypeSel" onchange="otypeSelChange(this.value)" aria-label="Delivery, takeaway or dine-in">
     <option value="Delivery">🚴 Delivery</option>
     <option value="Takeaway">🥡 Takeaway</option>
@@ -1150,7 +1156,7 @@ function speakBtnHTML(it){return '<button class="speakbtn" onclick="speakDish(\'
 function speakDish(n,p){try{if(!("speechSynthesis" in window)){toast("🔊 Voice not supported on this phone");return}window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(n+(p?(", Rupees "+p):"")+".");u.lang="en-US";window.speechSynthesis.speak(u)}catch(e){toast("🔊 Voice not available right now")}}
 function starStr(r){var f=Math.round(parseFloat(r));if(f<0)f=0;if(f>5)f=5;return "★★★★★".slice(0,f)+"☆☆☆☆☆".slice(0,5-f)}
 function starsHTML(it){var rt=ratingFor(it.n);return '<div class="stars">'+starStr(rt.r)+'<small>'+rt.r+' ('+rt.c+' reviews)</small></div>'}
-function metaHTML(it){var al=allergensFor(it);return '<div class="meta-row"><span title="Spice level">'+chilis(it)+'</span><span>🔥 ≈ '+caloriesFor(it)+' kcal</span>'+(al?'<span title="Allergen information">⚠️ Allergens: '+al+'</span>':'')+'</div>'}
+function metaHTML(it){return '<div class="meta-row"><span title="Spice level">'+chilis(it)+'</span><span>🔥 ≈ '+caloriesFor(it)+' kcal</span></div>'}
 function sizeChipsHTML(kind,it,sel,inc){
   return '<div class="sizechips" role="group" aria-label="Pizza size">'+SIZES.map(function(s){
     return '<button class="sizechip'+(s===sel?" on":"")+(inc&&s===inc?" inc":"")+'" onclick="'+kind+'(\''+escQ(it.n)+'\',\''+s+'\')" aria-label="'+s+' pizza">'+SZSHORT[s]+(inc&&s===inc?" ✓":"")+'</button>';
@@ -1160,8 +1166,15 @@ function dealCtlHTML(name,price,img,q){
   if(!q) return '<button class="plusbtn" onclick="addItem(\''+escQ(name)+'\','+price+',\''+img+'\')" aria-label="Add to cart">+</button>';
   return '<span class="stepper"><button onclick="chgQty(\''+escQ(name)+'\',-1)">−</button><b>'+q+'</b><button onclick="chgQty(\''+escQ(name)+'\',1)">+</button></span>';
 }
+/* --- deal photo = ONLY the items included in the deal, all of them ---
+   Each component of the deal description gets its own photo; a component
+   with no photo gets a named tile instead of a generic feast photo. --- */
+var DEAL_PHOTO_MAP=[["zinger","zinger"],["hot wings","wings"],["wings","wings"],["roll","shawarma"],["shawarma","shawarma"],["burger","burger"],["chicken","chicken"],["pizza","pizza"],["biryani","rice"],["rice","rice"],["fries","fries"],["tin pack","drink"],["drink","drink"],["500 ml","drink"],["1 ltr","drink"],["1.5 ltr","drink"],["2 ltr","drink"],["chapli","bbq"],["kabab","bbq"],["bbq","bbq"],["fish","fish"],["pasta","pasta"],["ice cream","ice"],["tortilla","tortilla"]];
+function dealPhotoKey(part){var s=part.toLowerCase();for(var i=0;i<DEAL_PHOTO_MAP.length;i++){if(s.indexOf(DEAL_PHOTO_MAP[i][0])>-1)return DEAL_PHOTO_MAP[i][1];}return "";}
+function dealPhotoLabel(part,key){if(key==="drink")return /tin/i.test(part)?"Tin Pack":"Drink";var s=part.replace(/^\s*\d+(\.\d+)?\s*(pcs|pc)?\s*/i,"").trim();return s.length>18?s.slice(0,18):s;}
+function dealPhotosHTML(it){var parts=(it.d||"").split("+"),seen={},tiles="";parts.forEach(function(p){var label=p.trim();if(!label)return;var key=dealPhotoKey(label);if(key&&seen[key])return;if(key)seen[key]=1;var name=dealPhotoLabel(label,key)||label;if(key&&IMG[key])tiles+='<div class="dph"><img src="'+IMG[key]+'" alt="'+name+'" loading="lazy"><span>'+name+'</span></div>';else tiles+='<div class="dph txt"><span>'+name+'</span></div>';});if(!tiles)tiles='<div class="dph"><img src="'+it.img+'" alt="'+it.n+'" loading="lazy"><span>'+it.n.replace(/^.*? \u2014 /,"")+'</span></div>';return '<div class="dealphotos">'+tiles+'</div>';}
 function dealCardHTML(it){
-  var h='<div class="item deal" data-deal="'+cssId(it.n)+'"><div class="dealbanner"><img src="'+it.img+'" alt="'+it.n+'" loading="lazy">'
+  var h='<div class="item deal" data-deal="'+cssId(it.n)+'"><div class="dealbanner">'+dealPhotosHTML(it)
   +'<span class="savebadge">'+it.code+'</span>'+(POPULAR.indexOf(it.code)>-1?'<span class="popbadge">⭐ Popular</span>':'')+'</div>'
   +favBtnHTML(it)
   +'<div class="item-body"><h4>'+it.n.replace(/^.*? — /,"")+'</h4>'
@@ -1754,7 +1767,7 @@ chefRender();
 sheetSpecialLoad();
 
 /* ============ OFFLINE FEATURES: promo codes, add-ons, popular, goes-well,
-   opening hours, area checker, ETA, allergens, feedback ============ */
+   opening hours, area checker, ETA, feedback ============ */
 /* Signature deals marked as house favourites */
 var POPULAR=["S1","S2","S3","Z1"];
 /* Demo promo codes — the shop approves or changes these at handover */
@@ -1794,15 +1807,6 @@ function updatePromoUI(x){
   var pc=document.getElementById("freeDelPct");if(pc)pc.textContent=pct+"%";
   var tx=document.getElementById("freeDelTxt");
   if(tx)tx.innerHTML=x.t>=500?"🎉 You reached Rs 500 — <b style='color:#fff'>delivery is FREE!</b>":"Add <b style='color:#fff'>"+fmt(500-x.t)+"</b> more to reach Rs 500 — then delivery is FREE.";
-}
-/* --- allergens by dish type (factual only) + existing approx calories stay in metaHTML --- */
-function allergensFor(it){
-  var s=(it.n+" "+(it.d||"")).toLowerCase();
-  if(/pizza|pasta/.test(s))return "Gluten, Dairy";
-  if(/ice cream/.test(s))return "Dairy";
-  if(/burger|shawarma|pratha|kabab roll|zinger/.test(s))return "Gluten";
-  if(/cheese slice/.test(s))return "Dairy";
-  return "";
 }
 /* --- add-ons per dish, priced ONLY at the printed extra-topping rates
    (Small Rs 60 • Medium Rs 100 • Large Rs 220). Regular dishes use the Small rate. --- */
