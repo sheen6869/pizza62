@@ -1173,6 +1173,9 @@ var DEAL_PHOTO_MAP=[["zinger","zinger"],["hot wings","wings"],["wings","wings"],
 function dealPhotoKey(part){var s=part.toLowerCase();for(var i=0;i<DEAL_PHOTO_MAP.length;i++){if(s.indexOf(DEAL_PHOTO_MAP[i][0])>-1)return DEAL_PHOTO_MAP[i][1];}return "";}
 function dealPhotoLabel(part,key){if(key==="drink")return /tin/i.test(part)?"Tin Pack":"Drink";var s=part.replace(/^\s*\d+(\.\d+)?\s*(pcs|pc)?\s*/i,"").trim();return s.length>18?s.slice(0,18):s;}
 function dealPhotosHTML(it){var parts=(it.d||"").split("+"),seen={},tiles="";parts.forEach(function(p){var label=p.trim();if(!label)return;var key=dealPhotoKey(label);if(key&&seen[key])return;if(key)seen[key]=1;var name=dealPhotoLabel(label,key)||label;if(key&&IMG[key])tiles+='<div class="dph"><img src="'+IMG[key]+'" alt="'+name+'" loading="lazy"><span>'+name+'</span></div>';else tiles+='<div class="dph txt"><span>'+name+'</span></div>';});if(!tiles)tiles='<div class="dph"><img src="'+it.img+'" alt="'+it.n+'" loading="lazy"><span>'+it.n.replace(/^.*? \u2014 /,"")+'</span></div>';return '<div class="dealphotos">'+tiles+'</div>';}
+/* --- cart thumbnail for a deal = photo of its FIRST included item ---
+   The cart must never show the deal's generic feast photo. --- */
+function dealCartImg(it){var parts=(it.d||"").split("+");for(var i=0;i<parts.length;i++){var key=dealPhotoKey(parts[i].trim());if(key&&IMG[key])return IMG[key];}return it.img;}
 function dealCardHTML(it){
   var h='<div class="item deal" data-deal="'+cssId(it.n)+'"><div class="dealbanner">'+dealPhotosHTML(it)
   +'<span class="savebadge">'+it.code+'</span>'+(POPULAR.indexOf(it.code)>-1?'<span class="popbadge">⭐ Popular</span>':'')+'</div>'
@@ -1184,7 +1187,7 @@ function dealCardHTML(it){
   if(it.dual){h+=dealDualHTML(it)}
   else if(it.p===null){h+='<div class="pricerow"><span class="callprice">'+"Call for price"+'</span><a class="callbtn" href="tel:0622442233">📞 '+"Call"+'</a></div>'}
   else{var k=keyOf(it.n);var q=cart[k]?cart[k].q:0;
-    h+='<div class="pricerow"><span class="dealprice"><small>Rs</small>'+it.p.toLocaleString()+'</span><span class="dealctl" id="ctl-'+cssId(k)+'">'+dealCtlHTML(it.n,it.p,it.img,q)+'</span></div>'}
+    h+='<div class="pricerow"><span class="dealprice"><small>Rs</small>'+it.p.toLocaleString()+'</span><span class="dealctl" id="ctl-'+cssId(k)+'">'+dealCtlHTML(it.n,it.p,dealCartImg(it),q)+'</span></div>'}
   h+=goesWellHTML();
   return h+'</div></div>';
 }
@@ -1192,19 +1195,19 @@ function dealDualHTML(it){
   var sel=dealSize[it.n]||it.sz||"Small";var h="";
   if(it.sz==="Mixed"){
     h+='<div class="pzsum">🍕 Pizza sizes in this deal: <b style="color:#fff">Medium + Small</b> — printed Regular / Special prices below.</div>'
-    +'<div class="dual"><button onclick="addItem(\''+escQ(it.n)+' (Regular, Mixed Sizes)\','+it.reg+',\''+it.img+'\')"><span>Regular</span><b>Rs '+it.reg.toLocaleString()+'</b></button>'
-    +'<button onclick="addItem(\''+escQ(it.n)+' (Special, Mixed Sizes)\','+it.spec+',\''+it.img+'\')"><span>Special</span><b>Rs '+it.spec.toLocaleString()+'</b></button></div>';
+    +'<div class="dual"><button onclick="addItem(\''+escQ(it.n)+' (Regular, Mixed Sizes)\','+it.reg+',\''+dealCartImg(it)+'\')"><span>Regular</span><b>Rs '+it.reg.toLocaleString()+'</b></button>'
+    +'<button onclick="addItem(\''+escQ(it.n)+' (Special, Mixed Sizes)\','+it.spec+',\''+dealCartImg(it)+'\')"><span>Special</span><b>Rs '+it.spec.toLocaleString()+'</b></button></div>';
     return h;
   }
   h+='<div class="sizelabel">🍕 Pizza size — '+sel+(sel===it.sz?' <span style="color:var(--amber)">(included in this deal)</span>':'')+'</div>'
   +sizeChipsHTML('setDealSize',it,sel,it.sz);
   if(sel===it.sz){
-    h+='<div class="dual"><button onclick="addItem(\''+escQ(it.n)+' (Regular, '+sel+')\','+it.reg+',\''+it.img+'\')"><span>Regular</span><b>Rs '+it.reg.toLocaleString()+'</b></button>'
-    +'<button onclick="addItem(\''+escQ(it.n)+' (Special, '+sel+')\','+it.spec+',\''+it.img+'\')"><span>Special</span><b>Rs '+it.spec.toLocaleString()+'</b></button></div>';
+    h+='<div class="dual"><button onclick="addItem(\''+escQ(it.n)+' (Regular, '+sel+')\','+it.reg+',\''+dealCartImg(it)+'\')"><span>Regular</span><b>Rs '+it.reg.toLocaleString()+'</b></button>'
+    +'<button onclick="addItem(\''+escQ(it.n)+' (Special, '+sel+')\','+it.spec+',\''+dealCartImg(it)+'\')"><span>Special</span><b>Rs '+it.spec.toLocaleString()+'</b></button></div>';
   }else{
     h+='<div class="pzsum" style="margin-top:0">The printed price covers the '+it.sz+' pizza. For a '+sel+' pizza the price is confirmed on call — add it and we will confirm on WhatsApp.</div>'
-    +'<div class="dual"><button onclick="addItem(\''+escQ(it.n)+' (Regular, '+sel+') — price on call\',0,\''+it.img+'\')"><span>Regular • '+SZSHORT[sel]+'</span><b>Call for price</b></button>'
-    +'<button onclick="addItem(\''+escQ(it.n)+' (Special, '+sel+') — price on call\',0,\''+it.img+'\')"><span>Special • '+SZSHORT[sel]+'</span><b>Call for price</b></button></div>';
+    +'<div class="dual"><button onclick="addItem(\''+escQ(it.n)+' (Regular, '+sel+') — price on call\',0,\''+dealCartImg(it)+'\')"><span>Regular • '+SZSHORT[sel]+'</span><b>Call for price</b></button>'
+    +'<button onclick="addItem(\''+escQ(it.n)+' (Special, '+sel+') — price on call\',0,\''+dealCartImg(it)+'\')"><span>Special • '+SZSHORT[sel]+'</span><b>Call for price</b></button></div>';
   }
   return h;
 }
@@ -1278,7 +1281,7 @@ function ctlHTML(name,price,img,q){
 function refreshCtls(){
   CATS.forEach(function(c){c.sections.forEach(function(s){s.items.forEach(function(it){
     if(it.dual||it.p===null)return;var k=keyOf(it.n);var el=document.getElementById("ctl-"+cssId(k));
-    if(el)el.innerHTML=el.classList.contains("dealctl")?dealCtlHTML(it.n,it.p,it.img,cart[k]?cart[k].q:0):ctlHTML(it.n,it.p,it.img,cart[k]?cart[k].q:0);
+    if(el)el.innerHTML=el.classList.contains("dealctl")?dealCtlHTML(it.n,it.p,dealCartImg(it),cart[k]?cart[k].q:0):ctlHTML(it.n,it.p,it.img,cart[k]?cart[k].q:0);
   })})});
 }
 /* ============ NAV ============ */
@@ -1549,7 +1552,7 @@ function openFavs(){
     if(it.pizza){pr="From "+fmt(pzMin(it));btn='<button class="addbtn" onclick="closeModal(\'favModal\');openCat(\'pizzas\')">VIEW</button>'}
     else if(it.dual){pr=fmt(it.reg)+" / "+fmt(it.spec);btn='<button class="addbtn" onclick="closeModal(\'favModal\');openCat(\'pizza-deals\')">VIEW</button>'}
     else if(it.p===null||it.p===undefined){pr="Call for price";btn='<a class="callbtn" href="tel:0622442233">📞 Call</a>'}
-    else{pr=fmt(it.p);btn='<button class="addbtn" onclick="addItem(\''+n.replace(/'/g,"\\'")+'\','+it.p+',\''+it.img+'\')">+ ADD</button>'}
+    else{pr=fmt(it.p);btn='<button class="addbtn" onclick="addItem(\''+n.replace(/'/g,"\\'")+'\','+it.p+',\''+(it.code?dealCartImg(it):it.img)+'\')">+ ADD</button>'}
     return '<div class="crow"><img src="'+it.img+'" alt=""><div style="flex:1"><div class="nm">'+it.n.replace(/^.*? — /,"")+'</div><div class="pr">'+pr+'</div></div>'
     +btn
     +'<button class="addbtn" style="background:var(--card2);color:#fff;border:1px solid var(--line)" onclick="toggleFav(\''+n.replace(/'/g,"\\'")+'\',null);openFavs()">✕</button></div>'}).join("");
@@ -1639,9 +1642,9 @@ function chatAdd(who,html,dishes){
   d.className="msg "+who;d.innerHTML=html;
   (dishes||[]).forEach(function(it){
     var b=document.createElement("button");b.className="dishbtn";
-    if(it.dual){b.textContent="+ "+it.n+" (Regular) — "+fmt(it.reg);b.onclick=function(){addItem(it.n+" (Regular)",it.reg,it.img)}}
+    if(it.dual){b.textContent="+ "+it.n+" (Regular) — "+fmt(it.reg);b.onclick=function(){addItem(it.n+" (Regular)",it.reg,(it.code?dealCartImg(it):it.img))}}
     else if(it.p===null||it.p===undefined){return}
-    else{b.textContent="+ "+it.n.replace(/^.*? — /,"")+" — "+fmt(it.p);b.onclick=function(){addItem(it.n,it.p,it.img)}}
+    else{b.textContent="+ "+it.n.replace(/^.*? — /,"")+" — "+fmt(it.p);b.onclick=function(){addItem(it.n,it.p,(it.code?dealCartImg(it):it.img))}}
     d.appendChild(b);
   });
   box.appendChild(d);box.scrollTop=box.scrollHeight;
